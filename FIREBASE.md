@@ -47,3 +47,16 @@ No console, em **Firestore Database → Dados**:
 - Para ligar: o dono desse WhatsApp ativa o CallMeBot (https://www.callmebot.com/blog/free-api-whatsapp-messages/)
   e coloca a chave recebida em `var WHATS_AVISO={telefone:'5561998898416',apikey:'...'}` no `index.html`.
 - Sem a chave, nada é enviado (o painel continua mostrando tudo).
+
+## Proteções do OWASP Top 10 (2025)
+- **A01/A10 – Anti-robô (App Check + reCAPTCHA):** o banco só aceita pedidos que vêm do site depois da verificação do
+  Google reCAPTCHA. Programas e robôs que tentam gravar direto são recusados. O selo do reCAPTCHA fica escondido e o aviso
+  aparece em texto na primeira tela e na Política de privacidade.
+- **A02 – Regra de segurança (CSP):** a página só carrega código e se conecta aos endereços do Firebase, do Google e do WhatsApp.
+- **A03/A08 – Impressão digital (SRI):** as bibliotecas do Firebase só rodam se forem exatamente as originais.
+- **A05/A08 – Dados conferidos no servidor:** nome só com letras, telefone no formato `(61) 99999-9999`, dias e horários
+  só da lista do formulário, horário escrito à mão curto e sem fórmulas. A planilha do Excel também neutraliza fórmulas.
+- **A07 – Login:** senha com no mínimo 8 caracteres, letra e número (o Firebase exige); senhas comuns são recusadas no
+  "Alterar senha"; as mensagens não revelam se um e-mail tem conta; o admin sai sozinho depois de 1 hora sem uso.
+- **A09 – Registro:** o painel **🔒 Segurança** mostra as últimas entradas no admin e cada senha errada.
+- **A10 – Sem travar:** se a internet, o Firebase ou o reCAPTCHA não responderem, o formulário avisa em vez de ficar parado.

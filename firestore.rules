@@ -17,17 +17,27 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.token.get('email', '-'))));
     }
 
-    // Campos que a pessoa pode enviar pelo formulário.
+    // Campos que a pessoa pode enviar pelo formulário, conferidos aqui no servidor (OWASP A05/A08).
     // "uid" é o login anônimo (invisível) do aparelho que fez o cadastro.
     function pedidoValido(id) {
       let d = request.resource.data;
-      return d.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'atualizadoEm', 'contatado', 'uid'])
+      return d.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'horarioLivre', 'criadoEm', 'atualizadoEm', 'contatado', 'uid'])
         && d.tipo in ['dar', 'receber']
-        && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 100
-        && d.telefone is string && d.telefone.size() <= 20
+        // nome: só letras (com acento), espaço, apóstrofo, ponto e hífen
+        && d.nome is string && d.nome.size() >= 3 && d.nome.size() <= 100
+        && d.nome.matches("^[\\p{L}][\\p{L}' .-]*$")
+        // telefone no formato (61) 99999-9999 ou (61) 3333-4444
+        && d.telefone is string && d.telefone.matches("^\\([1-9][1-9]\\) 9?[0-9]{4}-[0-9]{4}$")
         && id == d.telefone.replace('[^0-9]', '')
-        && d.dias is list && d.dias.size() <= 7
-        && d.horarios is list && d.horarios.size() <= 5
+        // dias e horários só da lista do formulário
+        && d.dias is list && d.dias.size() >= 1 && d.dias.size() <= 7
+        && d.dias.toSet().hasOnly(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'])
+        && d.horarios is list && d.horarios.size() <= 3
+        && d.horarios.toSet().hasOnly(['Manhã (8h–12h)', 'Tarde (12h–18h)', 'Noite (18h–22h)'])
+        // horário escrito à mão: opcional, curto e sem virar fórmula na planilha
+        && (!('horarioLivre' in d) || (d.horarioLivre is string && d.horarioLivre.size() >= 1
+              && d.horarioLivre.size() <= 60 && !d.horarioLivre.matches('^[=+@-].*')))
+        && (d.horarios.size() >= 1 || 'horarioLivre' in d)
         && d.contatado == false
         && d.uid == request.auth.uid;
     }
@@ -58,6 +68,17 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['email', 'motivo', 'aparelho', 'quando'])
         && request.resource.data.email is string && request.resource.data.email.size() <= 100
         && request.resource.data.motivo is string && request.resource.data.motivo.size() <= 40
+        && request.resource.data.aparelho is string && request.resource.data.aparelho.size() <= 200
+        && request.resource.data.quando == request.time;
+      allow read, delete: if ehAdmin();
+    }
+
+    // Registro de cada entrada na Área do administrador (OWASP A09). Só administradores gravam e leem.
+    match /acessos/{id} {
+      allow create: if ehAdmin()
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'aparelho', 'quando'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string && request.resource.data.email.size() <= 100
         && request.resource.data.aparelho is string && request.resource.data.aparelho.size() <= 200
         && request.resource.data.quando == request.time;
       allow read, delete: if ehAdmin();
