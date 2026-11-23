@@ -421,6 +421,9 @@ document.querySelectorAll('.card').forEach(function(card){
       usuario:function(){return fb().then(function(f){return new Promise(function(ok){var u=f.auth().onAuthStateChanged(function(x){u();ok(x&&!x.isAnonymous?x:null)})})})},
       entrar:function(email,senha){return fb().then(function(f){return f.auth().signInWithEmailAndPassword(email,senha)})},
       redefinir:function(email){return fb().then(function(f){f.auth().languageCode='pt-BR';return f.auth().sendPasswordResetEmail(email)})},
+      trocarSenha:function(atual,nova){return fb().then(function(f){var u=f.auth().currentUser;
+        var cred=firebase.auth.EmailAuthProvider.credential(u.email,atual);
+        return u.reauthenticateWithCredential(cred).then(function(){return u.updatePassword(nova)})})},
       verificar:function(){return fb().then(function(f){f.auth().languageCode='pt-BR';var u=f.auth().currentUser;return u&&u.sendEmailVerification()})},
       eDono:function(){return typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser&&firebase.auth().currentUser.email===DONO},
       emailAtual:function(){return typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser?(firebase.auth().currentUser.email||''):''},
@@ -682,7 +685,7 @@ document.querySelectorAll('.card').forEach(function(card){
       '<form class="vpane" style="margin-top:18px;display:grid;gap:12px" novalidate>'+
       '<div><label class="vq" for="ve" style="font-size:16px;margin-bottom:8px">E-mail</label><input class="vin" id="ve" type="email" autocomplete="username" autofocus></div>'+
       '<div><label class="vq" for="vs" style="font-size:16px;margin-bottom:8px">Senha</label><input class="vin" id="vs" type="password" autocomplete="current-password"></div>'+
-      '<div class="verr" role="alert" style="margin:0">'+esc(msg||'')+'</div><div class="vnav" style="justify-content:space-between;align-items:center;margin:0"><button type="button" class="vlinkb" data-a="esqueci">Esqueci / criar minha senha</button><button class="vb" type="submit">Entrar</button></div></form>'+
+      '<p class="vsubt" style="margin:0!important">Esqueceu a senha ou é o primeiro acesso? Digite o e-mail e toque em <b>Redefinir senha</b>.</p><div class="verr" role="alert" style="margin:0">'+esc(msg||'')+'</div><div class="vnav" style="justify-content:space-between;align-items:center;margin:0"><button type="button" class="vb ghost" data-a="esqueci">Redefinir senha</button><button class="vb" type="submit">Entrar</button></div></form>'+
       (BK.configurado?'':'<div class="vnote">⚠️ O site ainda não está ligado ao Firebase. Siga o passo a passo do arquivo <b>FIREBASE.md</b> no GitHub.</div>');
     var f=vc.querySelector('form'),e=f.querySelector('#ve'),s=f.querySelector('#vs');
     [e,s].forEach(function(i){i.addEventListener('input',function(){limpar(i)})});
@@ -697,7 +700,7 @@ document.querySelectorAll('.card').forEach(function(card){
       if(!BK.configurado){err.textContent='O Firebase ainda não foi configurado.';return}
       esq.disabled=true;
       BK.redefinir(em).catch(function(){}).then(function(){esq.disabled=false;
-        err.innerHTML='<span class="vokmsg">Se esse e-mail for de um administrador, enviamos para ele um link para criar uma nova senha. Veja também a caixa de spam.</span>'})};
+        err.innerHTML='<span class="vokmsg">Pronto! Se esse e-mail for de um administrador, enviamos um link para criar uma senha nova. Abra o e-mail (veja também o spam), clique no link e depois entre aqui com a senha nova.</span>'})};
     foco()}
 
   function carregar(){vc.innerHTML='<p class="vempty">Carregando…</p>';
@@ -726,7 +729,7 @@ document.querySelectorAll('.card').forEach(function(card){
         '<button role="tab" data-t="dar" aria-selected="'+(adm.tab==='dar')+'">Voluntários <span>'+pend('dar')+'</span></button></div>'+
         '<input class="vin" type="search" placeholder="Buscar nome, telefone, dia…" value="'+esc(adm.q)+'" aria-label="Buscar">'+
         '<select class="vsel" aria-label="Filtrar"><option value="todos">Todos</option><option value="pend">A contatar</option><option value="ok">Já contatados</option></select></div>'+
-      '<div class="vacts"><button class="vb ghost sm" data-a="att">↻ Atualizar</button><button class="vb ghost sm" data-a="csv">⬇ Baixar planilha (Excel)</button>'+(BK.eDono&&BK.eDono()?'<button class="vb ghost sm" data-a="adms">Administradores</button>':'')+'<a class="vb ghost sm" href="admin.html">Atalho no celular</a><button class="vb ghost sm" data-a="sair">Sair</button></div>'+
+      '<div class="vacts"><button class="vb ghost sm" data-a="att">↻ Atualizar</button><button class="vb ghost sm" data-a="csv">⬇ Baixar planilha (Excel)</button>'+(BK.eDono&&BK.eDono()?'<button class="vb ghost sm" data-a="adms">Administradores</button>':'')+'<button class="vb ghost sm" data-a="senha">Alterar senha</button><a class="vb ghost sm" href="admin.html">Atalho no celular</a><button class="vb ghost sm" data-a="sair">Sair</button></div>'+
       '<div class="vlist" role="tabpanel"></div>';
     vc.querySelector('.vsel').value=adm.f;
     vc.querySelectorAll('.vtabs button').forEach(function(b){b.onclick=function(){adm.tab=b.dataset.t;vAdmin()}});
@@ -736,6 +739,7 @@ document.querySelectorAll('.card').forEach(function(card){
     vc.querySelector('[data-a=csv]').onclick=csv;
     vc.querySelector('[data-a=sair]').onclick=function(){BK.sair();adm.dados=null;lembrar(false);atualizarSelo(null);fechar()};
     var ga=vc.querySelector('[data-a=adms]');if(ga)ga.onclick=vAdmins;
+    vc.querySelector('[data-a=senha]').onclick=vSenha;
     lista()}
 
   function lista(){var el=vc.querySelector('.vlist'),l=filtrados();
@@ -761,6 +765,38 @@ document.querySelectorAll('.card').forEach(function(card){
     BK.marcar(p.id,v).catch(function(){p.contatado=!v;c.checked=!v;it.classList.toggle('ok',!v);
         var m=vc.querySelector('.vacts');if(m&&!m.querySelector('.verr'))m.insertAdjacentHTML('beforeend','<span class="verr" style="margin:0;align-self:center">Não foi possível salvar. Tente de novo.</span>')})
       .then(function(){c.disabled=false;var b=vc.querySelector('.vtabs [aria-selected=true] span');if(b)b.textContent=pend(adm.tab)})}
+
+  /* ---------- alterar a senha (logado) ---------- */
+  function vSenha(){box.classList.remove('wide');
+    vc.innerHTML='<span class="vlbl">ADMIN</span><h3 id="vt">Alterar senha</h3><p>Para sua segurança, digite a senha atual e depois a nova.</p>'+
+      '<form class="vpane" style="margin-top:18px;display:grid;gap:12px" novalidate>'+
+      '<div><label class="vq" for="vsa" style="font-size:16px;margin-bottom:8px">Senha atual</label><input class="vin" id="vsa" type="password" autocomplete="current-password" autofocus></div>'+
+      '<div><label class="vq" for="vsn" style="font-size:16px;margin-bottom:8px">Senha nova</label><input class="vin" id="vsn" type="password" autocomplete="new-password"><p class="vsubt">Pelo menos 8 caracteres, com letras e números.</p></div>'+
+      '<div><label class="vq" for="vsc" style="font-size:16px;margin-bottom:8px">Repita a senha nova</label><input class="vin" id="vsc" type="password" autocomplete="new-password"></div>'+
+      '<div class="verr" role="alert" style="margin:0"></div>'+
+      '<div class="vnav" style="margin:0"><button type="button" class="vb ghost" data-a="volt">← Voltar</button><button class="vb" type="submit">Salvar senha</button></div></form>'+
+      '<p class="vsubt" style="margin-top:14px!important">Não lembra a senha atual? Toque em <b>Sair</b> no painel e use <b>Redefinir senha</b> na tela de entrar.</p>';
+    var f=vc.querySelector('form'),a=f.querySelector('#vsa'),n=f.querySelector('#vsn'),c=f.querySelector('#vsc'),err=f.querySelector('.verr');
+    [a,n,c].forEach(function(i){i.addEventListener('input',function(){limpar(i)})});
+    vc.querySelector('[data-a=volt]').onclick=vAdmin;
+    f.onsubmit=function(ev){ev.preventDefault();
+      if(!a.value)return tremer(a,OBRIG);
+      if(!n.value)return tremer(n,OBRIG);
+      if(n.value.length<8||!/[a-zA-Z]/.test(n.value)||!/[0-9]/.test(n.value))return tremer(n,'A senha nova precisa ter pelo menos 8 caracteres, com letras e números.');
+      if(c.value!==n.value)return tremer(c,'As duas senhas novas não são iguais.');
+      if(n.value===a.value)return tremer(n,'A senha nova precisa ser diferente da atual.');
+      var btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Salvando…';
+      BK.trocarSenha(a.value,n.value).then(function(){
+        vc.innerHTML='<div class="vcenter vpane"><div class="vok">'+IC_OK+'</div><h3 id="vt">Senha alterada!</h3><p>Da próxima vez, entre com a senha nova.</p>'+
+          '<div class="vnav" style="justify-content:center;margin-top:22px"><button class="vb" data-a="ok">Voltar ao painel</button></div></div>';
+        vc.querySelector('[data-a=ok]').onclick=vAdmin;foco()
+      }).catch(function(e){btn.disabled=false;btn.textContent='Salvar senha';
+        var cod=e&&e.code||'';
+        if(cod==='auth/wrong-password'||cod==='auth/invalid-credential'||cod==='auth/invalid-login-credentials')return tremer(a,'A senha atual está errada.');
+        if(cod==='auth/weak-password')return tremer(n,'Essa senha é fraca. Use uma senha mais forte.');
+        if(cod==='auth/too-many-requests')return void(err.textContent='Muitas tentativas. Espere alguns minutos e tente de novo.');
+        err.textContent='Não foi possível alterar agora. Tente de novo.'})};
+    foco()}
 
   /* ---------- administradores extras ---------- */
   function vAdmins(){box.classList.add('wide');
