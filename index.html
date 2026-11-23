@@ -142,7 +142,7 @@ a.lk:focus-visible{outline:3px solid #ffc42d;outline-offset:4px}
 .vb:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .vok{width:72px;height:72px;border-radius:50%;background:#ffc42d;color:#161616;display:grid;place-items:center;margin:8px auto 16px;animation:vpop .5s cubic-bezier(.2,1.4,.4,1)}
 @keyframes vpop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
-.vcenter{text-align:center}.vcenter h3{padding:0}
+.vcenter{text-align:center}.vbox .vsalvo{display:inline-block;margin:2px 0 12px;padding:7px 14px;border-radius:999px;background:rgba(255,196,45,.16);color:#ffd65c;font-weight:700;font-size:14px}.vcenter h3{padding:0}
 .vnote{margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.28);font-size:14px;color:rgba(255,255,255,.85)}
 .vtop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 14px}
 .vtabs{display:flex;gap:6px;background:rgba(0,0,0,.28);padding:5px;border-radius:999px}
@@ -467,11 +467,11 @@ document.querySelectorAll('.card').forEach(function(card){
     function passo(){if(S.anim!==tok)return;if(i>=NPAG-1)return fim();
       var prox=i+1,est=abertura(prox);
       carregada(prox).then(function(){if(S.anim!==tok)return;base.src=pg(prox);
-        var d=est?170:65;
+        var d=est?110:40;
         var a=reduz?flip.animate([{opacity:1},{opacity:0}],{duration:d,fill:'forwards'})
                    :flip.animate([{transform:'rotateY(0deg)',filter:'brightness(1)'},{transform:'rotateY(-180deg)',filter:'brightness(.55)'}],{duration:d,easing:'ease-in',fill:'forwards'});
         a.onfinish=function(){if(S.anim!==tok)return;i=prox;flip.src=pg(i);
-          (flip.decode?flip.decode():Promise.resolve()).catch(function(){}).then(function(){a.cancel();mostrar(i,est);setTimeout(passo,est?230:0)})}})}
+          (flip.decode?flip.decode():Promise.resolve()).catch(function(){}).then(function(){a.cancel();mostrar(i,est);setTimeout(passo,est?130:0)})}})}
     function fim(){S.anim=null;base.src=flip.src=pg(0);book.classList.add('vhl');
       cap.firstChild.textContent='27 ESTUDOS BÍBLICOS';cap.lastChild.textContent='Ouvindo a Voz de Deus';cap.classList.remove('pop');void cap.offsetWidth;cap.classList.add('pop');
       bar.style.width='100%';num.textContent=NPAG+' páginas';
@@ -482,13 +482,13 @@ document.querySelectorAll('.card').forEach(function(card){
     nav.querySelector('[data-a=voltar]').onclick=function(){S.anim=null;S.passo=3;vForm()};
     nav.querySelector('[data-a=pular]').onclick=fim;
     flip.src=pg(0);base.src=pg(1);mostrar(0,false);
-    carregada(0).then(function(){setTimeout(passo,500)});
+    carregada(0).then(function(){setTimeout(passo,400)});
     box.scrollTop=0}
 
   function vFeito(){var primeiro=esc(S.nome.split(' ')[0]);
-    vc.innerHTML='<div class="vcenter vpane"><div class="vok">'+IC_OK+'</div><h3 id="vt">Tudo certo, '+primeiro+'!</h3><p>'+
-      (S.tipo==='dar'?'Obrigado por querer ser voluntário e compartilhar a Palavra de Deus! Em breve a igreja vai falar com você pelo WhatsApp.'
-                     :'Recebemos o seu pedido. Em breve alguém da igreja vai falar com você pelo WhatsApp para combinar o seu estudo bíblico.')+
+    vc.innerHTML='<div class="vcenter vpane"><div class="vok">'+IC_OK+'</div><h3 id="vt">Tudo certo, '+primeiro+'!</h3><p class="vsalvo">Todos os seus dados foram salvos com sucesso.</p><p>'+
+      (S.tipo==='dar'?'Obrigado por querer ser voluntário e compartilhar a Palavra de Deus! A <b>Igreja Adventista do Primavera</b> vai entrar em contato com você pelo WhatsApp para combinar os próximos passos.'
+                     :'A <b>Igreja Adventista do Primavera</b> vai entrar em contato com você pelo WhatsApp para combinar o seu estudo bíblico.')+
       '</p><div class="vnav" style="justify-content:center;margin-top:22px"><button class="vb" data-a="ok">Fechar</button></div></div>';
     vc.querySelector('[data-a=ok]').onclick=fechar;foco()}
 
