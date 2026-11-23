@@ -10,29 +10,38 @@ service cloud.firestore {
         && request.auth.token.email in ['SEU-EMAIL-DE-ADMIN@gmail.com'];
     }
 
-    // Pedidos de estudo bíblico.
-    // Qualquer pessoa pode ENVIAR um pedido, mas só o admin pode LER, marcar e apagar.
-    // O documento tem o nome "tipo_telefone", então o mesmo telefone não entra duas vezes.
-    match /pedidos/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'contatado'])
-        && request.resource.data.tipo in ['dar', 'receber']
-        && request.resource.data.nome is string
-        && request.resource.data.nome.size() >= 2 && request.resource.data.nome.size() <= 100
-        && request.resource.data.telefone is string
-        && request.resource.data.telefone.size() <= 20
-        && id == request.resource.data.tipo + '_' + request.resource.data.telefone.replace('[^0-9]', '')
-        && request.resource.data.dias is list && request.resource.data.dias.size() <= 7
-        && request.resource.data.horarios is list && request.resource.data.horarios.size() <= 5
-        && request.resource.data.criadoEm == request.time
-        && request.resource.data.contatado == false;
-      allow read, update, delete: if ehAdmin();
+    // Campos que a pessoa pode enviar pelo formulário.
+    function pedidoValido(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'atualizadoEm', 'contatado'])
+        && d.tipo in ['dar', 'receber']
+        && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 100
+        && d.telefone is string && d.telefone.size() <= 20
+        && id == d.telefone.replace('[^0-9]', '')
+        && d.dias is list && d.dias.size() <= 7
+        && d.horarios is list && d.horarios.size() <= 5
+        && d.contatado == false;
     }
 
-    // Lista só de telefones já cadastrados (sem nome nem outros dados),
+    // Pedidos de estudo bíblico: um cadastro por telefone (o nome do documento é o número).
+    // Assim a mesma pessoa não fica como "dar" e "receber" ao mesmo tempo.
+    // Qualquer pessoa pode ENVIAR ou ATUALIZAR o próprio cadastro, mas só o admin pode LER, marcar e apagar.
+    match /pedidos/{id} {
+      allow create: if pedidoValido(id)
+        && request.resource.data.criadoEm == request.time
+        && !('atualizadoEm' in request.resource.data);
+      allow update: if ehAdmin() || (pedidoValido(id)
+        && request.resource.data.criadoEm == resource.data.criadoEm
+        && request.resource.data.atualizadoEm == request.time);
+      allow read, delete: if ehAdmin();
+    }
+
+    // Lista só de telefones já cadastrados e o tipo (sem nome nem outros dados),
     // usada para avisar "este telefone já está cadastrado".
     match /telefones/{id} {
       allow get: if true;
-      allow create: if request.resource.data.keys().hasOnly(['tipo'])
+      allow create, update: if request.resource.data.keys().hasOnly(['tipo'])
+        && request.resource.data.tipo in ['dar', 'receber']
         && existsAfter(/databases/$(database)/documents/pedidos/$(id));
       allow delete: if ehAdmin();
     }
