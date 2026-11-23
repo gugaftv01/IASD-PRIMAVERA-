@@ -1,49 +1,61 @@
 rules_version = '2';
 
 // Regras do banco de dados (Firestore) para o formulário "Ouvindo a Voz de Deus".
-// Para ter mais de um admin, coloque os outros e-mails na lista abaixo e crie o usuário em Authentication.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function ehAdmin() {
+    // Administrador principal (dono). Só ele adiciona e remove outros administradores.
+    function ehDono() {
       return request.auth != null
-        && request.auth.token.email in ['vitinhovenanciodesouza317@gmail.com'];
+        && request.auth.token.get('email', '') == 'vitinhovenanciodesouza317@gmail.com';
+    }
+
+    // Administradores extras: estão na coleção "admins" e precisam ter confirmado o e-mail.
+    function ehAdmin() {
+      return ehDono() || (request.auth != null
+        && request.auth.token.get('email_verified', false) == true
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.get('email', '-'))));
     }
 
     // Campos que a pessoa pode enviar pelo formulário.
+    // "uid" é o login anônimo (invisível) do aparelho que fez o cadastro.
     function pedidoValido(id) {
       let d = request.resource.data;
-      return d.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'atualizadoEm', 'contatado'])
+      return d.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'atualizadoEm', 'contatado', 'uid'])
         && d.tipo in ['dar', 'receber']
         && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 100
         && d.telefone is string && d.telefone.size() <= 20
         && id == d.telefone.replace('[^0-9]', '')
         && d.dias is list && d.dias.size() <= 7
         && d.horarios is list && d.horarios.size() <= 5
-        && d.contatado == false;
+        && d.contatado == false
+        && d.uid == request.auth.uid;
     }
 
     // Pedidos de estudo bíblico: um cadastro por telefone (o nome do documento é o número).
-    // Assim a mesma pessoa não fica como "dar" e "receber" ao mesmo tempo.
-    // Qualquer pessoa pode ENVIAR ou ATUALIZAR o próprio cadastro, mas só o admin pode LER, marcar e apagar.
+    // - Qualquer pessoa ENVIA um cadastro novo.
+    // - Só o mesmo aparelho que criou consegue VER e ALTERAR o próprio cadastro.
+    // - Ninguém consegue saber se o telefone de outra pessoa está cadastrado.
+    // - Só administradores LISTAM, marcam e apagam.
     match /pedidos/{id} {
-      allow create: if pedidoValido(id)
+      allow create: if request.auth != null
+        && pedidoValido(id)
         && request.resource.data.criadoEm == request.time
         && !('atualizadoEm' in request.resource.data);
-      allow update: if ehAdmin() || (pedidoValido(id)
+      allow update: if ehAdmin() || (request.auth != null
+        && resource.data.uid == request.auth.uid
+        && pedidoValido(id)
         && request.resource.data.criadoEm == resource.data.criadoEm
         && request.resource.data.atualizadoEm == request.time);
-      allow read, delete: if ehAdmin();
+      allow get: if ehAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow list, delete: if ehAdmin();
     }
 
-    // Lista só de telefones já cadastrados e o tipo (sem nome nem outros dados),
-    // usada para avisar "este telefone já está cadastrado".
-    match /telefones/{id} {
-      allow get: if true;
-      allow create, update: if request.resource.data.keys().hasOnly(['tipo'])
-        && request.resource.data.tipo in ['dar', 'receber']
-        && existsAfter(/databases/$(database)/documents/pedidos/$(id));
-      allow delete: if ehAdmin();
+    // Lista de administradores extras (o nome do documento é o e-mail).
+    match /admins/{email} {
+      allow read: if ehAdmin();
+      allow create, delete: if ehDono()
+        && (request.resource == null || request.resource.data.keys().hasOnly(['adicionadoEm']));
     }
   }
 }

@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "iasd-primavera"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
