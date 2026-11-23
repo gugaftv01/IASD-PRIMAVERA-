@@ -502,9 +502,10 @@ document.querySelectorAll('.card').forEach(function(card){
         return Promise.all([js('https://www.gstatic.com/firebasejs/'+V+'/firebase-firestore-compat.js'),js('https://www.gstatic.com/firebasejs/'+V+'/firebase-auth-compat.js')])
       }).then(function(){if(!firebase.apps.length)firebase.initializeApp(FIREBASE);return firebase}).catch(function(e){pronto=null;throw e});
       return pronto}
-    var DONO='vitinhovenanciodesouza317@gmail.com';
+    // administrador principal: identificado pelo código da conta (UID), sem expor o e-mail
+    var DONO_UID='1Iu6jx216aVasQnBVHov8S6bWay1';
     // E-mail que recebe o relatório de senha errada (pelo FormSubmit). Vazio = só guarda no histórico do painel.
-    var AVISO_EMAIL=DONO;
+    var AVISO_EMAIL='';   // relatório por e-mail desligado para não expor o e-mail no código (veja FIREBASE.md)
     function aparelho(){var u=navigator.userAgent||'',so=/Android/.test(u)?'Android':/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'Outro sistema';
       var nav=/SamsungBrowser/.test(u)?'Samsung Internet':/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/Firefox\//.test(u)?'Firefox':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':'outro navegador';
       return so+' · '+nav+' · tela '+screen.width+'×'+screen.height}
@@ -531,7 +532,7 @@ document.querySelectorAll('.card').forEach(function(card){
         var cred=firebase.auth.EmailAuthProvider.credential(u.email,atual);
         return u.reauthenticateWithCredential(cred).then(function(){return u.updatePassword(nova)})})},
       verificar:function(){return fb().then(function(f){f.auth().languageCode='pt-BR';var u=f.auth().currentUser;return u&&u.sendEmailVerification()})},
-      eDono:function(){return typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser&&firebase.auth().currentUser.email===DONO},
+      eDono:function(){return typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser&&firebase.auth().currentUser.uid===DONO_UID},
       emailAtual:function(){return typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser?(firebase.auth().currentUser.email||''):''},
       emailVerificado:function(){var u=typeof firebase!=='undefined'&&firebase.apps.length&&firebase.auth().currentUser;return !!(u&&u.emailVerified)},
       sair:function(){return fb().then(function(f){return f.auth().signOut()})},

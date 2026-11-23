@@ -4,10 +4,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Administrador principal (dono). Só ele adiciona e remove outros administradores.
+    // Administrador principal (dono), identificado pelo código da conta (UID). Só ele adiciona e remove outros administradores.
     function ehDono() {
       return request.auth != null
-        && request.auth.token.get('email', '') == 'vitinhovenanciodesouza317@gmail.com';
+        && request.auth.uid == '1Iu6jx216aVasQnBVHov8S6bWay1';
     }
 
     // Administradores extras: estão na coleção "admins" e precisam ter confirmado o e-mail.

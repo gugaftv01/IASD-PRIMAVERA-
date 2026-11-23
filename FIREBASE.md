@@ -14,7 +14,7 @@ Os pedidos de estudo bíblico ficam guardados no Firebase, no projeto **iasd-pri
   Se o site mudar de endereço (domínio próprio), adicione o novo endereço nessa chave.
 
 ## Administradores
-- **Principal:** `vitinhovenanciodesouza317@gmail.com` (fica no `firestore.rules`).
+- **Principal:** a sua conta, identificada no `firestore.rules` pelo código da conta (UID), sem o e-mail aparecer no código.
 - **Outros:** o administrador principal adiciona e remove na Área do administrador, botão **Administradores**.
   A pessoa recebe dois e-mails: um para confirmar o e-mail e outro para criar a senha.
   Só depois de confirmar o e-mail ela consegue ver os pedidos.
@@ -36,9 +36,9 @@ No console, em **Firestore Database → Dados**:
 
 ## Senha errada na Área do administrador
 - Toda senha errada fica no painel, botão **Tentativas de login** (coleção `tentativas` no Firestore).
-- Um relatório também vai por e-mail para o administrador principal, pelo serviço gratuito **FormSubmit** (formsubmit.co).
-  Na primeira vez, o FormSubmit manda um e-mail pedindo para **ativar**; só depois disso os relatórios chegam.
-  Para desligar o e-mail, troque `var AVISO_EMAIL=DONO;` por `var AVISO_EMAIL='';` no `index.html`.
+- O relatório por e-mail (FormSubmit) está **desligado** para o seu e-mail não aparecer no código do site.
+  Para ligar sem expor o e-mail: ative o FormSubmit e use o **código (alias)** que ele manda no e-mail de confirmação
+  em `var AVISO_EMAIL='...'` no `index.html`.
 
 ## Aviso de cadastro novo no WhatsApp
 - No final do cadastro, a pessoa tem o botão **Enviar meus dados pelo WhatsApp**, que abre o WhatsApp dela com a mensagem pronta para o número 55 61 99889-8416.
