@@ -601,6 +601,22 @@ document.querySelectorAll('.card').forEach(function(card){
   /* ---------- aviso de cadastro novo no WhatsApp da igreja (CallMeBot) ---------- */
   // WhatsApp que recebe cada cadastro novo, pelo CallMeBot. Sem a chave (apikey), não manda nada.
     var WHATS_AVISO={telefone:'5561998898416',apikey:''};
+  /* ---------- aviso por e-mail a cada acesso ao site (FormSubmit) ---------- */
+  // AVISO_ACESSO: o código (alias) que o FormSubmit dá na ativação, no lugar do e-mail. Vazio = não manda nada.
+  var AVISO_ACESSO='';
+  (function(){if(!AVISO_ACESSO)return;
+    var ult=0;try{ult=+localStorage.getItem('vd_aviso_acesso')||0}catch(e){}
+    if(Date.now()-ult<30*60*1000)return;   // no máximo um aviso a cada 30 min por aparelho
+    var novo=false;try{novo=!localStorage.getItem('vd_ja_visitou');localStorage.setItem('vd_ja_visitou','1');localStorage.setItem('vd_aviso_acesso',String(Date.now()))}catch(e){}
+    var u=navigator.userAgent||'';
+    var ap=(/Android/.test(u)?'Android':/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':'Outro')+' · '+
+      (/SamsungBrowser/.test(u)?'Samsung Internet':/Edg\//.test(u)?'Edge':/Instagram/.test(u)?'Instagram':/FBAN|FBAV/.test(u)?'Facebook':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':/Firefox\//.test(u)?'Firefox':'outro navegador');
+    setTimeout(function(){fetch('https://formsubmit.co/ajax/'+encodeURIComponent(AVISO_ACESSO),{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({_subject:'🔔 Novo acesso – IASD Primavera',_template:'table',_captcha:'false',
+        'Site':'IASD Primavera','Data e hora':new Date().toLocaleString('pt-BR',{dateStyle:'full',timeStyle:'short'}),
+        'Visitante':novo?'Primeira visita neste aparelho':'Já tinha visitado antes','Aparelho':ap,
+        'Veio de':document.referrer?document.referrer.split('/').slice(0,3).join('/'):'link direto ou app'})}).catch(function(){})},2500)})();
+
   function avisarCadastro(d,atualizou){if(!WHATS_AVISO.apikey)return Promise.resolve();
         var dig=String(d.telefone||'').replace(/\D/g,''),agora=new Date();
         var txt=['📖 *Ouvindo a Voz de Deus – '+(atualizou?'cadastro atualizado':'novo cadastro')+'*','',
@@ -650,7 +666,8 @@ document.querySelectorAll('.card').forEach(function(card){
       '<div class="vpol">'+
       sec('Quem cuida dos seus dados','<p>A <b>Igreja Adventista do Primavera</b> é a responsável pelos dados enviados neste formulário.</p>')+
       sec('Quais dados coletamos','<ul><li>Nome completo</li><li>Telefone/WhatsApp</li><li>Se você quer <b>receber</b> ou <b>dar</b> estudo bíblico</li><li>Dias e horários disponíveis</li><li>Data e hora do cadastro</li></ul>'+
-        '<p>Para proteger o seu cadastro, o site também cria um identificador anônimo do seu aparelho. Ele serve só para que você consiga alterar os seus próprios dados depois.</p>')+
+        '<p>Para proteger o seu cadastro, o site também cria um identificador anônimo do seu aparelho. Ele serve só para que você consiga alterar os seus próprios dados depois.</p>'+
+        '<p>Quando alguém abre o site, a igreja recebe um aviso com a data, a hora e o tipo de aparelho (sem nome nem telefone), só para saber quantas pessoas acessam.</p>')+
       sec('Para que usamos','<p>Somente para a igreja entrar em contato com você pelo WhatsApp e combinar os estudos bíblicos. <b>Não vendemos, não emprestamos e não usamos para propaganda.</b></p>')+
       sec('Por que podemos usar','<p>Usamos os seus dados com o seu <b>consentimento</b>, que você dá ao enviar o formulário (Lei Geral de Proteção de Dados – LGPD, Lei 13.709/2018). Como o interesse em estudar a Bíblia está ligado à fé, tratamos esse dado com cuidado especial e só para esta finalidade.</p>')+
       sec('Quem tem acesso','<ul><li>Apenas os <b>administradores</b> autorizados da igreja, com login e senha.</li>'+
