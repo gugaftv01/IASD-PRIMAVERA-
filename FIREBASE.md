@@ -41,6 +41,8 @@ No console, em **Firestore Database → Dados**:
   Para desligar o e-mail, troque `var AVISO_EMAIL=DONO;` por `var AVISO_EMAIL='';` no `index.html`.
 
 ## Aviso de cadastro novo no WhatsApp
+- No final do cadastro, a pessoa tem o botão **Enviar meus dados pelo WhatsApp**, que abre o WhatsApp dela com a mensagem pronta para o número 55 61 99889-8416.
+- Envio automático (opcional, quando o CallMeBot tiver vagas):
 - Cada cadastro novo (ou atualizado) manda uma mensagem organizada para o WhatsApp **55 61 99889-8416**, pelo serviço gratuito **CallMeBot**.
 - Para ligar: o dono desse WhatsApp ativa o CallMeBot (https://www.callmebot.com/blog/free-api-whatsapp-messages/)
   e coloca a chave recebida em `var WHATS_AVISO={telefone:'5561998898416',apikey:'...'}` no `index.html`.
