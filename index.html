@@ -427,7 +427,7 @@ document.querySelectorAll('.card').forEach(function(card){
       return pronto}
     var DONO='vitinhovenanciodesouza317@gmail.com';
     // E-mail que recebe o relatório de senha errada (pelo FormSubmit). Vazio = só guarda no histórico do painel.
-    var AVISO_EMAIL='';
+    var AVISO_EMAIL=DONO;
     function aparelho(){var u=navigator.userAgent||'',so=/Android/.test(u)?'Android':/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'Outro sistema';
       var nav=/SamsungBrowser/.test(u)?'Samsung Internet':/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/Firefox\//.test(u)?'Firefox':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':'outro navegador';
       return so+' · '+nav+' · tela '+screen.width+'×'+screen.height}
@@ -827,7 +827,7 @@ document.querySelectorAll('.card').forEach(function(card){
   /* ---------- histórico de senhas erradas ---------- */
   function vTentativas(){box.classList.add('wide');
     vc.innerHTML='<span class="vlbl">ADMIN</span><h3 id="vt">Tentativas de login com senha errada</h3>'+
-      '<p>Cada vez que alguém erra a senha na Área do administrador, fica registrado aqui.</p>'+
+      '<p>Cada vez que alguém erra a senha na Área do administrador, fica registrado aqui e um relatório vai para o e-mail do administrador principal.</p>'+
       '<div class="vacts" style="margin-top:14px"><button type="button" class="vb ghost sm" data-a="volt">← Voltar aos pedidos</button></div>'+
       '<div class="vlist vtentl"><p class="vempty">Carregando…</p></div>';
     vc.querySelector('[data-a=volt]').onclick=vAdmin;

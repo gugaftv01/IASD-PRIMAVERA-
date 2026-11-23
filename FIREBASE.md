@@ -33,3 +33,9 @@ No console, em **Firestore Database → Dados**:
   3. Mande a chave do site para ligar o App Check no formulário.
 - **Aviso por e-mail de cadastro novo:** precisa do plano pago do Firebase (Blaze). Hoje o aviso aparece como
   um número vermelho no botão **Área do administrador**, para quem já entrou como admin naquele aparelho.
+
+## Senha errada na Área do administrador
+- Toda senha errada fica no painel, botão **Tentativas de login** (coleção `tentativas` no Firestore).
+- Um relatório também vai por e-mail para o administrador principal, pelo serviço gratuito **FormSubmit** (formsubmit.co).
+  Na primeira vez, o FormSubmit manda um e-mail pedindo para **ativar**; só depois disso os relatórios chegam.
+  Para desligar o e-mail, troque `var AVISO_EMAIL=DONO;` por `var AVISO_EMAIL='';` no `index.html`.
