@@ -497,6 +497,18 @@ document.querySelectorAll('.card').forEach(function(card){
       limparTentativas:function(ids){return fb().then(function(f){var db=f.firestore(),b=db.batch();ids.forEach(function(i){b.delete(db.collection('tentativas').doc(i))});return b.commit()})}
     }})();
 
+  /* ---------- aviso de cadastro novo no WhatsApp da igreja (CallMeBot) ---------- */
+  // WhatsApp que recebe cada cadastro novo, pelo CallMeBot. Sem a chave (apikey), não manda nada.
+    var WHATS_AVISO={telefone:'5561998898416',apikey:''};
+  function avisarCadastro(d,atualizou){if(!WHATS_AVISO.apikey)return Promise.resolve();
+        var dig=String(d.telefone||'').replace(/\D/g,''),agora=new Date();
+        var txt=['📖 *Ouvindo a Voz de Deus – '+(atualizou?'cadastro atualizado':'novo cadastro')+'*','',
+          (d.tipo==='dar'?'🙋 *Voluntário para DAR estudo bíblico*':'📩 *Quer RECEBER estudo bíblico*'),'',
+          '*Nome:* '+d.nome,'*WhatsApp:* '+d.telefone,'*Dias:* '+(d.dias||[]).join(', '),'*Horários:* '+(d.horarios||[]).join(', '),
+          '*Enviado em:* '+agora.toLocaleDateString('pt-BR')+' às '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),'',
+          '💬 Conversar: https://wa.me/55'+dig,'🔐 Painel: '+location.origin+location.pathname+'#admin'].join('\n');
+        return fetch('https://api.callmebot.com/whatsapp.php?phone='+WHATS_AVISO.telefone+'&apikey='+encodeURIComponent(WHATS_AVISO.apikey)+'&text='+encodeURIComponent(txt),{mode:'no-cors'}).catch(function(){})}
+
   function abrir(){if(!root.classList.contains('open')){lastFocus=document.activeElement;root.classList.add('open');document.body.style.overflow='hidden'}}
   function fechar(){if(S){S.anim=null;S.autoT=null;S.logoT=null}root.classList.remove('open');document.body.style.overflow='';
     if(location.hash)history.replaceState(null,'',location.pathname+location.search);
@@ -513,7 +525,7 @@ document.querySelectorAll('.card').forEach(function(card){
       '<div class="vopts"><button class="vopt" data-t="receber"><span class="ic">'+IC_BOOK+'</span><span><b>Quero receber estudo bíblico!</b><small>Alguém da igreja vai estudar a Bíblia com você.</small></span></button>'+
       '<button class="vopt" data-t="dar"><span class="ic">'+IC_HAND+'</span><span><b>Quero ser voluntário para dar estudo bíblico!</b><small>Ajude a compartilhar a Palavra de Deus.</small></span></button></div>'+
       '<p class="vpriv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'+
-      '<span>Seus dados (nome, telefone, dias e horários) são usados só pela Igreja Adventista do Primavera para combinar o estudo bíblico. Ninguém mais tem acesso. Para pedir que sejam apagados, é só falar com a igreja.</span></p>'+
+      '<span>Seus dados (nome, telefone, dias e horários) são usados só pela Igreja Adventista do Primavera para combinar o estudo bíblico e são enviados para o WhatsApp da igreja. Para pedir que sejam apagados, é só falar com a igreja.</span></p>'+
       '<div class="vadm-in"><a href="#admin" class="vadmbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Área do administrador'+selo()+'</a></div>';
     vc.querySelectorAll('.vopt').forEach(function(b){b.onclick=function(){S.tipo=b.dataset.t;vForm()}});
     foco()}
@@ -619,7 +631,7 @@ document.querySelectorAll('.card').forEach(function(card){
     btn.disabled=true;btn.textContent='Enviando…';
     var horas=S.horas.slice();if(S.horaTxt)horas.push(S.horaTxt);
     BK.salvar(chave(),{tipo:S.tipo,nome:S.nome,telefone:mascara(S.tel),dias:S.dias,horarios:horas},S.atualizar===chave())
-      .then(vFeito)
+      .then(function(){avisarCadastro({tipo:S.tipo,nome:S.nome,telefone:mascara(S.tel),dias:S.dias,horarios:horas},S.atualizar===chave());vFeito()})
       .catch(function(e){btn.hidden=false;btn.disabled=false;btn.textContent='Concluir ✓';
         if(e&&e.message==='duplicado'){vDuplicado();return}
         err.textContent='Não foi possível enviar agora. Verifique sua internet e tente de novo.'})}
