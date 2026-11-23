@@ -1095,8 +1095,9 @@ document.querySelectorAll('.card').forEach(function(card){
 
   /* ---------- navegação ---------- */
   function rota(){var h=location.hash;
-    if(h==='#estudo'){abrir();vEscolha()}
-    else if(h==='#admin'){abrir();
+    // link antigo com #estudo: abre a página inicial (com todos os cards), não a janela
+    if(h==='#estudo'){history.replaceState(null,'',location.pathname+location.search);return}
+    if(h==='#admin'){abrir();
       if(!BK.configurado)return vLogin();
       vc.innerHTML='<p class="vempty">Carregando…</p>';
       BK.usuario().then(function(u){if(u)carregar();else vLogin()}).catch(function(){vLogin('Não foi possível conectar. Verifique a internet.')})}}
@@ -1105,7 +1106,8 @@ document.querySelectorAll('.card').forEach(function(card){
   root.addEventListener('click',function(e){if(e.target===root)fechar()});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&root.classList.contains('open'))fechar()});
   var card=document.getElementById('ouvindo');
-  function ir(){if(location.hash==='#estudo')rota();else location.hash='estudo'}
+  // abre a janela sem mudar o endereço do site (assim um link copiado leva sempre à página inicial)
+  function ir(){abrir();vEscolha()}
   card.addEventListener('click',ir);
   card.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();ir()}});
   rota();
