@@ -1,69 +1,30 @@
-# Ligar o formulário "Ouvindo a Voz de Deus" ao Firebase
+# Firebase do formulário "Ouvindo a Voz de Deus"
 
-Os pedidos de estudo bíblico ficam guardados no Firebase (banco de dados Firestore).
-A "Área do administrador" do site lê esses pedidos depois que você entra com e-mail e senha.
+Os pedidos de estudo bíblico ficam guardados no Firebase, no projeto **iasd-primavera**
+(banco Firestore em São Paulo). O console fica em https://console.firebase.google.com/project/iasd-primavera.
 
-Leva uns 10 minutos e é feito uma vez só. O plano gratuito do Firebase (Spark) é suficiente.
+## O que já está configurado
+- Projeto **IASD Primavera** (`iasd-primavera`) e o app Web do site.
+- **Firestore** em `southamerica-east1` (São Paulo), com as regras do arquivo `firestore.rules`.
+- **Login por e-mail e senha** ativado, com o admin `vitinhovenanciodesouza317@gmail.com`.
+- A configuração do site (`var FIREBASE = {...}` no `index.html`). Ela não é segredo.
 
-## 1. Criar o projeto
-1. Entre em https://console.firebase.google.com com a conta Google da igreja.
-2. Clique em **Criar um projeto** (ex.: `iasd-primavera`). O Google Analytics pode ficar desligado.
+## Regras de segurança (`firestore.rules`)
+- Qualquer pessoa pode **enviar** um pedido ou **atualizar** o próprio cadastro (pelo telefone).
+- Só o admin pode **ler**, **marcar como contatado** e **apagar**.
+- Um cadastro por telefone: a mesma pessoa não fica como "dar" e "receber" ao mesmo tempo.
 
-## 2. Criar o banco de dados
-1. No menu da esquerda: **Criação → Firestore Database → Criar banco de dados**.
-2. Local: `southamerica-east1 (São Paulo)`.
-3. Escolha **Iniciar no modo de produção**.
-4. Abra a aba **Regras**, apague tudo, cole todo o conteúdo do arquivo `firestore.rules` e
-   troque `SEU-EMAIL-DE-ADMIN@gmail.com` pelo seu e-mail de admin. Clique em **Publicar**.
+## Senha do admin
+Na **Área do administrador** do site, digite o e-mail e clique em **Esqueci / criar minha senha**.
+O Firebase manda um e-mail com o link para criar uma senha nova.
 
-## 3. Criar o login do admin
-1. No menu: **Criação → Authentication → Vamos começar**.
-2. Em **Método de login**, ative **E-mail/senha**.
-3. Na aba **Usuários**, clique em **Adicionar usuário** e cadastre o e-mail de admin
-   (o mesmo das regras) e uma senha.
-   Para ter mais de um admin, cadastre outros usuários e coloque todos os e-mails na lista das regras:
-   `['admin1@gmail.com', 'admin2@gmail.com']`.
-
-## 4. Pegar a configuração do site
-1. Clique na engrenagem ⚙️ → **Configurações do projeto**.
-2. Em **Seus apps**, clique no ícone **</>** (Web), dê um nome (ex.: `site`) e clique em **Registrar app**.
-3. Vai aparecer um código com `const firebaseConfig = { apiKey: ..., authDomain: ..., ... }`.
-   Copie esse bloco. Ele não é segredo, pode ir no site.
-
-## 5. Colocar no site
-No `index.html`, procure a linha:
-
-```js
-var FIREBASE = null;
-```
-
-e troque pelo bloco copiado, assim:
-
-```js
-var FIREBASE = {
-  apiKey: "...",
-  authDomain: "iasd-primavera.firebaseapp.com",
-  projectId: "iasd-primavera",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
-```
-
-## 6. Permitir o endereço do site no login
-Em **Authentication → Configurações → Domínios autorizados**, clique em **Adicionar domínio** e coloque
-`gugaftv01.github.io`.
-
-## Usar a Área do administrador
-- No fim do site, clique em **Área do administrador** (ou abra o site com `#admin` no final do endereço).
-- Entre com o e-mail e a senha do passo 3.
-- Você vê quem quer **receber** estudo e os **voluntários**, com botão de WhatsApp, busca, filtro
-  "A contatar / Já contatados" e um botão para baixar tudo numa planilha do Excel.
+## Ter mais de um admin
+1. No console: **Authentication → Usuários → Adicionar usuário** e cadastre o e-mail.
+2. No `firestore.rules`, coloque o e-mail na lista: `['admin1@gmail.com', 'admin2@gmail.com']`.
+3. Publique as regras: no console, **Firestore → Regras**, cole o arquivo e clique em **Publicar**.
+4. A pessoa usa **Esqueci / criar minha senha** no site para criar a própria senha.
 
 ## Onde ficam os dados
-No Firebase, em **Firestore Database → Dados**:
-- `pedidos`: os cadastros (nome, telefone, dias, horários, data, contatado).
-- `telefones`: só a lista de telefones já usados, para avisar quando alguém tenta se cadastrar de novo.
-
-Para liberar um telefone (por exemplo, se a pessoa errou algo e quer mandar de novo), apague o documento dele
-nas duas coleções, `pedidos` e `telefones`.
+No console, em **Firestore Database → Dados**:
+- `pedidos`: os cadastros (nome, telefone, tipo, dias, horários, data, contatado). O nome do documento é o telefone.
+- `telefones`: só os telefones já usados e o tipo, para avisar quando alguém tenta se cadastrar de novo.

@@ -1,13 +1,13 @@
 rules_version = '2';
 
 // Regras do banco de dados (Firestore) para o formulário "Ouvindo a Voz de Deus".
-// TROQUE o e-mail abaixo pelo e-mail do administrador que você criar em Authentication.
+// Para ter mais de um admin, coloque os outros e-mails na lista abaixo e crie o usuário em Authentication.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function ehAdmin() {
       return request.auth != null
-        && request.auth.token.email in ['SEU-EMAIL-DE-ADMIN@gmail.com'];
+        && request.auth.token.email in ['vitinhovenanciodesouza317@gmail.com'];
     }
 
     // Campos que a pessoa pode enviar pelo formulário.
