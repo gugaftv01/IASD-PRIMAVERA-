@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Regras do banco de dados (Firestore) para o formulário "Ouvindo a Voz de Deus".
+// TROQUE o e-mail abaixo pelo e-mail do administrador que você criar em Authentication.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function ehAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['SEU-EMAIL-DE-ADMIN@gmail.com'];
+    }
+
+    // Pedidos de estudo bíblico.
+    // Qualquer pessoa pode ENVIAR um pedido, mas só o admin pode LER, marcar e apagar.
+    // O documento tem o nome "tipo_telefone", então o mesmo telefone não entra duas vezes.
+    match /pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['tipo', 'nome', 'telefone', 'dias', 'horarios', 'criadoEm', 'contatado'])
+        && request.resource.data.tipo in ['dar', 'receber']
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() >= 2 && request.resource.data.nome.size() <= 100
+        && request.resource.data.telefone is string
+        && request.resource.data.telefone.size() <= 20
+        && id == request.resource.data.tipo + '_' + request.resource.data.telefone.replace('[^0-9]', '')
+        && request.resource.data.dias is list && request.resource.data.dias.size() <= 7
+        && request.resource.data.horarios is list && request.resource.data.horarios.size() <= 5
+        && request.resource.data.criadoEm == request.time
+        && request.resource.data.contatado == false;
+      allow read, update, delete: if ehAdmin();
+    }
+
+    // Lista só de telefones já cadastrados (sem nome nem outros dados),
+    // usada para avisar "este telefone já está cadastrado".
+    match /telefones/{id} {
+      allow get: if true;
+      allow create: if request.resource.data.keys().hasOnly(['tipo'])
+        && existsAfter(/databases/$(database)/documents/pedidos/$(id));
+      allow delete: if ehAdmin();
+    }
+  }
+}
