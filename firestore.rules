@@ -51,6 +51,18 @@ service cloud.firestore {
       allow list, delete: if ehAdmin();
     }
 
+    // Histórico de senhas erradas na Área do administrador.
+    // O site só consegue ACRESCENTAR um registro (com a hora do servidor); só administradores leem e apagam.
+    match /tentativas/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['email', 'motivo', 'aparelho', 'quando'])
+        && request.resource.data.email is string && request.resource.data.email.size() <= 100
+        && request.resource.data.motivo is string && request.resource.data.motivo.size() <= 40
+        && request.resource.data.aparelho is string && request.resource.data.aparelho.size() <= 200
+        && request.resource.data.quando == request.time;
+      allow read, delete: if ehAdmin();
+    }
+
     // Lista de administradores extras (o nome do documento é o e-mail).
     match /admins/{email} {
       allow read: if ehAdmin();
